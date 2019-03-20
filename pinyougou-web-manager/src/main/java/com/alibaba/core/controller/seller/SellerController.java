@@ -1,6 +1,7 @@
 package com.alibaba.core.controller.seller;
 
 import com.alibaba.core.entity.PageResult;
+import com.alibaba.core.entity.Result;
 import com.alibaba.core.pojo.seller.Seller;
 import com.alibaba.core.service.seller.SellerService;
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -37,6 +38,24 @@ public class SellerController {
      */
     @RequestMapping("/findOne")
     public Seller findOne(String id) {
+        //回显
         return sellerService.findOne(id);
+    }
+
+    /**
+     * 审核商家
+     *
+     * @param sellerId
+     * @param status   0:待审核 1:审核通过 2:审核未通过 3关闭商家
+     */
+    @RequestMapping("/updateStatus")
+    public Result updateStatus(String sellerId, String status) {
+        try {
+            sellerService.updateStatus(sellerId, status);
+            return new Result(true, "操作成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Result(false, "操作失败");
+        }
     }
 }

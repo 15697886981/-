@@ -8,10 +8,10 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class SellerServiceImpl implements SellerService {
@@ -73,4 +73,20 @@ public class SellerServiceImpl implements SellerService {
         return sellerDao.selectByPrimaryKey(sellerId);
     }
 
+    /**
+     * 审核商家
+     *
+     * @param sellerId
+     * @param status   0:待审核 1:审核通过 2:审核未通过 3关闭商家
+     */
+    @Transactional
+    @Override
+    public void updateStatus(String sellerId, String status) {
+        Seller seller = new Seller();
+
+        seller.setStatus(status);
+        seller.setSellerId(sellerId);
+
+        sellerDao.updateByPrimaryKeySelective(seller);
+    }
 }

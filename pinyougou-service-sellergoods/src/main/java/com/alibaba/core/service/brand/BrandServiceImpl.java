@@ -4,6 +4,7 @@ import com.alibaba.core.dao.good.BrandDao;
 import com.alibaba.core.entity.PageResult;
 import com.alibaba.core.pojo.good.Brand;
 import com.alibaba.core.pojo.good.BrandQuery;
+import com.alibaba.core.pojo.seller.Seller;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;

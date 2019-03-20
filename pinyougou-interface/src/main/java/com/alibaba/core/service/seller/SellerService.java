@@ -28,4 +28,12 @@ public interface SellerService {
      * @return
      */
     Seller findOne(String sellerId);
+
+    /**
+     * 审核商家
+     *
+     * @param sellerId
+     * @param status   0:待审核 1:审核通过 2:审核未通过 3关闭商家
+     */
+    void updateStatus(String sellerId, String status);
 }

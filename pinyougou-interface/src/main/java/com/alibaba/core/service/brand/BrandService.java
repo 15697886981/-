@@ -70,4 +70,5 @@ public interface BrandService {
      * @return
      */
     List<Map<String, String>> selectOptionList();
+
 }
