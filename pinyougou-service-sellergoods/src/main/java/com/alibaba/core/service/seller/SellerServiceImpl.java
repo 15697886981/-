@@ -24,6 +24,7 @@ public class SellerServiceImpl implements SellerService {
      *
      * @param seller
      */
+    @Transactional
     @Override
     public void add(Seller seller) {
         //设置商家审核状态
