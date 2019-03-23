@@ -3,6 +3,9 @@ package com.alibaba.core.service.temp;
 import com.alibaba.core.entity.PageResult;
 import com.alibaba.core.pojo.template.TypeTemplate;
 
+import java.util.List;
+import java.util.Map;
+
 public interface TypeTemplateService {
     /**
      * 模版列表查询
@@ -44,4 +47,19 @@ public interface TypeTemplateService {
      * @param ids
      */
     void delete(Long[] ids);
+
+    /**
+     * 新建分类时 加载模板列表
+     *
+     * @return
+     */
+    List<TypeTemplate> findAll();
+
+    /**
+     * 添加商品 选择加载规格
+     *
+     * @param id
+     * @return
+     */
+    List<Map> findBySpecList(Long id);
 }

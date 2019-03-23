@@ -1,7 +1,8 @@
-package com.alibaba.core.controller.itemcat;
+package com.alibaba.core.controller.itemCat;
 
 import com.alibaba.core.entity.Result;
 import com.alibaba.core.pojo.item.ItemCat;
+import com.alibaba.core.pojo.template.TypeTemplate;
 import com.alibaba.core.service.itemcat.ItemCatService;
 import com.alibaba.dubbo.config.annotation.Reference;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,18 +31,24 @@ public class ItemCatController {
     }
 
     /**
-     * 保存分类
+     * 新增商品选择三级分类加载模板id
      *
-     * @param itemCat
+     * @param id
+     * @return
      */
-    @RequestMapping("/add.do")
-    public Result add(@RequestBody ItemCat itemCat) {
-        try {
-            itemCatService.add(itemCat);
-            return new Result(true, "添加成功");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Result(false, "添加失败");
-        }
+    @RequestMapping("/findOne.do")
+    public ItemCat findOne(Long id) {
+        return itemCatService.findOne(id);
+    }
+
+
+    /**
+     * 查询所有分类
+     *
+     * @return
+     */
+    @RequestMapping("/findAll.do")
+    public List<ItemCat> findAll() {
+        return itemCatService.findAll();
     }
 }

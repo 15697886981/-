@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/typeTemplate")
 public class TypeTemplateController {
@@ -90,5 +92,16 @@ public class TypeTemplateController {
             e.printStackTrace();
             return new Result(false, "删除失败");
         }
+    }
+
+
+    /**
+     * 新建分类时 加载模板列表
+     *
+     * @return
+     */
+    @RequestMapping("/findAll.do")
+    public List<TypeTemplate> findAll() {
+        return typeTemplateService.findAll();
     }
 }

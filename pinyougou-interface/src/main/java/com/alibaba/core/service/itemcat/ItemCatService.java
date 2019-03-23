@@ -12,4 +12,28 @@ public interface ItemCatService {
      * @return
      */
     List<ItemCat> findByParentId(Long parentId);
+
+    /**
+     * 保存分类
+     *
+     * @param itemCat
+     */
+    void add(ItemCat itemCat);
+
+    /**
+     * 新增商品选择三级分类加载模板id
+     *
+     * @param id
+     * @return
+     */
+    ItemCat findOne(Long id);
+
+
+    /**
+     * 查询所有分类
+     *
+     * @return
+     */
+    List<ItemCat> findAll();
+
 }

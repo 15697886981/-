@@ -1,15 +1,21 @@
 package com.alibaba.core.service.temp;
 
+import com.alibaba.core.dao.specification.SpecificationOptionDao;
 import com.alibaba.core.dao.template.TypeTemplateDao;
 import com.alibaba.core.entity.PageResult;
+import com.alibaba.core.pojo.specification.SpecificationOption;
+import com.alibaba.core.pojo.specification.SpecificationOptionQuery;
 import com.alibaba.core.pojo.template.TypeTemplate;
 import com.alibaba.core.pojo.template.TypeTemplateQuery;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class TypeTemplateServiceImpl implements TypeTemplateService {
@@ -17,6 +23,9 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
     //注入dao
     @Resource
     private TypeTemplateDao typeTemplateDao;
+
+    @Resource
+    private SpecificationOptionDao specificationOptionDao;
 
     /**
      * 模版列表查询
@@ -93,5 +102,46 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 //            }
             typeTemplateDao.deleteByPrimaryKeys(ids);
         }
+    }
+
+    /**
+     * 新建分类时 加载模板列表
+     *
+     * @return
+     */
+    @Override
+    public List<TypeTemplate> findAll() {
+        List<TypeTemplate> typeTemplates = typeTemplateDao.selectByExample(null);
+        return typeTemplates;
+    }
+
+    /**
+     * 添加商品 选择加载规格
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public List<Map> findBySpecList(Long id) {
+        //通过模板id获取规格
+        TypeTemplate typeTemplate = typeTemplateDao.selectByPrimaryKey(id);
+        //例子[{"id":27,"text":"网络"},{"id":32,"text":"机身内存"}]
+        String specIds = typeTemplate.getSpecIds();
+        List<Map> specList = JSON.parseArray(specIds, Map.class);
+
+        //通过规格id获取规格id
+        if (specList != null && specList.size() > 0) {
+            for (Map map : specList) {
+                Long specId = Long.parseLong(map.get("id").toString());
+                //通过规格id获取规格id
+                SpecificationOptionQuery query = new SpecificationOptionQuery();
+                query.createCriteria().andSpecIdEqualTo(specId);
+                List<SpecificationOption> options = specificationOptionDao.selectByExample(query);
+
+                //封装到map
+                map.put("options", options);
+            }
+        }
+        return specList;
     }
 }
