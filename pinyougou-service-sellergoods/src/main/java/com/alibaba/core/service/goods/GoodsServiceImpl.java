@@ -336,4 +336,67 @@ public class GoodsServiceImpl implements GoodsService {
             itemDao.insertSelective(item);
         }
     }
+
+    /**
+     * 运营商系统商品列表查询
+     *
+     * @param page
+     * @param rows
+     * @param goods
+     * @return
+     */
+    @Override
+    public PageResult searchForManager(Integer page, Integer rows, Goods goods) {
+        //设置分页条件
+        PageHelper.startPage(page, rows);
+
+        //设置查询条件 未审核&&未删除
+        GoodsQuery query = new GoodsQuery();
+        GoodsQuery.Criteria criteria = query.createCriteria();
+        if (goods.getGoodsName() != null && !"".equals(goods.getGoodsName().trim())) {
+            criteria.andGoodsNameEqualTo(goods.getGoodsName());
+        }
+        if (goods.getAuditStatus() != null && !"".equals(goods.getAuditStatus().trim())) {
+            //待审核
+            criteria.andAuditStatusEqualTo(goods.getAuditStatus());
+        }
+        if (goods.getIsDelete() != null && !"".equals(goods.getIsDelete().trim())) {
+            //未删除
+            criteria.andIsDeleteIsNotNull();
+        }
+
+        //设置排序
+        query.setOrderByClause("id desc");
+
+        //根据条件查询
+        Page<Goods> p = (Page<Goods>) goodsDao.selectByExample(query);
+
+        //封装结果集并返回
+        return new PageResult(p.getTotal(), p.getResult());
+    }
+
+    /**
+     * 审核商品
+     *
+     * @param ids
+     * @param status
+     */
+    @Override
+    public void updateStatus(Long[] ids, String status) {
+        if (ids != null && ids.length > 0) {
+            //修改审核状态
+            Goods goods = new Goods();
+            goods.setAuditStatus(status);
+
+            for (Long id : ids) {
+                goods.setId(id);
+                goodsDao.updateByPrimaryKeySelective(goods);
+                if ("1".equals(status)) {
+                    // TODO 2、将商品进行上架
+                    // TODO 3、生成商品详情的静态页
+                }
+
+            }
+        }
+    }
 }

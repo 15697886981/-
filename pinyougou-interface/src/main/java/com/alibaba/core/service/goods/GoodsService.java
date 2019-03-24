@@ -37,4 +37,22 @@ public interface GoodsService {
      * @param goodsVo
      */
     void update(GoodsVo goodsVo);
+
+    /**
+     * 运营商系统商品列表查询
+     *
+     * @param page
+     * @param rows
+     * @param goods
+     * @return
+     */
+    PageResult searchForManager(Integer page, Integer rows, Goods goods);
+
+    /**
+     * 审核商品
+     *
+     * @param ids
+     * @param status
+     */
+    void updateStatus(Long[] ids, String status);
 }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/goods")
-public class goodsController {
+public class GoodsController {
     //注入service
     @Reference
     private GoodsService goodsService;
