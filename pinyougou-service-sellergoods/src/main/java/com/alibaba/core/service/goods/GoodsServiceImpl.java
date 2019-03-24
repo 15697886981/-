@@ -182,7 +182,8 @@ public class GoodsServiceImpl implements GoodsService {
         if (goods.getSellerId() != null) {
             criteria.andSellerIdEqualTo(goods.getSellerId()); // 查询当前商家下的商品列表
         }
-
+        //未删除
+        criteria.andIsDeleteIsNotNull();
         //排序
         query.setOrderByClause("id desc");
 
@@ -360,10 +361,8 @@ public class GoodsServiceImpl implements GoodsService {
             //待审核
             criteria.andAuditStatusEqualTo(goods.getAuditStatus());
         }
-        if (goods.getIsDelete() != null && !"".equals(goods.getIsDelete().trim())) {
-            //未删除
-            criteria.andIsDeleteIsNotNull();
-        }
+        //未删除
+        criteria.andIsDeleteIsNull();
 
         //设置排序
         query.setOrderByClause("id desc");
@@ -395,6 +394,28 @@ public class GoodsServiceImpl implements GoodsService {
                     // TODO 2、将商品进行上架
                     // TODO 3、生成商品详情的静态页
                 }
+
+            }
+        }
+    }
+
+    /**
+     * 删除商品
+     *
+     * @param ids
+     */
+    @Transactional
+    @Override
+    public void delete(Long[] ids) {
+        if (ids != null && ids.length > 0) {
+            Goods goods = new Goods();
+            goods.setIsDelete("1");
+            for (Long id : ids) {
+                goods.setId(id);
+                goodsDao.updateByPrimaryKeySelective(goods);
+
+                // TODO 2、商品下架
+                // TODO 3、删除商品详情的静态页【可选】
 
             }
         }

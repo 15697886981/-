@@ -55,4 +55,11 @@ public interface GoodsService {
      * @param status
      */
     void updateStatus(Long[] ids, String status);
+
+    /**
+     * 删除商品
+     *
+     * @param ids
+     */
+    void delete(Long[] ids);
 }
