@@ -43,6 +43,11 @@
         <solrj.version>4.10.3</solrj.version>
         <ik.version>2012_u6</ik.version>
     </properties>
+
+    <!--
+        1、不强制依赖
+        2、锁定jar包的版本
+    -->
     <dependencyManagement>
         <dependencies>
             <!-- Spring -->
@@ -85,7 +90,8 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-test</artifactId>
                 <version>${spring.version}</version>
-            </dependency>    <!-- dubbo相关 -->
+            </dependency>
+            <!-- dubbo相关 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>dubbo</artifactId>
@@ -147,7 +153,8 @@
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
-            </dependency>    <!-- 连接池 -->
+            </dependency>
+            <!-- 连接池 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
@@ -157,12 +164,14 @@
                 <groupId>org.csource.fastdfs</groupId>
                 <artifactId>fastdfs</artifactId>
                 <version>1.2</version>
-            </dependency>    <!-- 文件上传组件 -->
+            </dependency>
+            <!-- 文件上传组件 -->
             <dependency>
                 <groupId>commons-fileupload</groupId>
                 <artifactId>commons-fileupload</artifactId>
                 <version>${commons-fileupload.version}</version>
-            </dependency>    <!-- 缓存 -->
+            </dependency>
+            <!-- 缓存 -->
             <dependency>
                 <groupId>redis.clients</groupId>
                 <artifactId>jedis</artifactId>
@@ -182,7 +191,8 @@
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-all</artifactId>
                 <version>${activemq.version}</version>
-            </dependency>    <!-- 身份验证 -->
+            </dependency>
+            <!-- 身份验证 -->
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-web</artifactId>
@@ -212,14 +222,16 @@
             <dependency>
                 <groupId>org.jasig.cas.client</groupId>
                 <artifactId>cas-client-core</artifactId>
-                <version>3.3.3</version>     <!-- 排除log4j包冲突 -->
+                <version>3.3.3</version>
+                <!-- 排除log4j包冲突 -->
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
                         <artifactId>log4j-over-slf4j</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>    <!-- solr客户端 -->
+            </dependency>
+            <!-- solr客户端 -->
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-solrj</artifactId>
@@ -255,10 +267,22 @@
                 <artifactId>wxpay-sdk</artifactId>
                 <version>0.0.3</version>
             </dependency>
+
         </dependencies>
+
     </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
     <build>
-        <plugins>    <!-- java编译插件 -->
+        <plugins>
+            <!-- java编译插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -271,5 +295,6 @@
             </plugin>
         </plugins>
     </build>
+
 
 </project>

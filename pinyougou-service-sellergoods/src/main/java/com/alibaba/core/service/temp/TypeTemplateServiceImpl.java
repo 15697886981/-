@@ -11,6 +11,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -27,6 +28,9 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
     @Resource
     private SpecificationOptionDao specificationOptionDao;
 
+    @Resource
+    private RedisTemplate redisTemplate;
+
     /**
      * 模版列表查询
      *
@@ -37,6 +41,24 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
      */
     @Override
     public PageResult search(Integer page, Integer rows, TypeTemplate typeTemplate) {
+        // 将模板数据放入缓存
+        List<TypeTemplate> list = typeTemplateDao.selectByExample(null);
+        if (list != null && list.size() > 0) {
+            for (TypeTemplate template : list) {
+                //缓存该模板下的品牌
+                //String brandIds=[{"id":37,"text":"花花公子"},{"id":38,"text":"七匹狼"}]
+                List<Map> mapList = JSON.parseArray(template.getBrandIds(), Map.class);
+                //List<Map> mapList={{key:37,value:花花公子},{key:38,value:七匹狼}}
+                redisTemplate.boundHashOps("brandList").put(template.getId(), mapList);
+
+
+                //缓存该模板下的规格
+                List<Map> specList = findBySpecList(template.getId());
+                redisTemplate.boundHashOps("specList").put(template.getId(), specList);
+            }
+        }
+
+
         //设置分页条件
         PageHelper.startPage(page, rows);
 

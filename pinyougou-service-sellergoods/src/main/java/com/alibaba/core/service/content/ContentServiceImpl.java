@@ -8,7 +8,9 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 @Service
@@ -16,6 +18,9 @@ public class ContentServiceImpl implements ContentService {
 
     @Autowired
     private ContentDao contentDao;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public List<Content> findAll() {
@@ -64,15 +69,24 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public List<Content> findByCategoryId(Long categoryId) {
 
-        // 设置条件：根据广告分类查询，并且是可用的
-        ContentQuery query = new ContentQuery();
-        query.createCriteria().andCategoryIdEqualTo(categoryId).andStatusEqualTo("1");
+        List<Content> list = (List<Content>) redisTemplate.boundHashOps("content").get(categoryId);
+        // 首先判断缓存中是否有数据
+        if (list == null) {
+            synchronized (this){
+                /*缓存中没有数据 从数据库中查询*/
+                // 设置条件：根据广告分类查询，并且是可用的
+                ContentQuery query = new ContentQuery();
+                query.createCriteria().andCategoryIdEqualTo(categoryId).andStatusEqualTo("1");
+                list = contentDao.selectByExample(query);
+                //设置排序
+                query.setOrderByClause("sort_order desc");
 
+                //把数据放入缓存
+                redisTemplate.boundHashOps("content").put(categoryId, list);
+            }
 
-        List<Content> list = contentDao.selectByExample(query);
+        }
 
-        //设置排序
-        query.setOrderByClause("sort_order desc");
 
         //设置查询
         return list;

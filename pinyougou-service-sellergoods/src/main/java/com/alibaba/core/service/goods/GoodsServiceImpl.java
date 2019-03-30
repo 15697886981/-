@@ -12,11 +12,14 @@ import com.alibaba.core.pojo.good.GoodsDesc;
 import com.alibaba.core.pojo.good.GoodsQuery;
 import com.alibaba.core.pojo.item.Item;
 import com.alibaba.core.pojo.item.ItemQuery;
+import com.alibaba.core.service.staticpage.StaticPageService;
 import com.alibaba.core.vo.GoodsVo;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.data.solr.core.SolrTemplate;
+import org.springframework.data.solr.core.query.SimpleQuery;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -41,6 +44,12 @@ public class GoodsServiceImpl implements GoodsService {
     private BrandDao brandDao;
     @Resource
     private SellerDao sellerDao;
+    //注入solrTemplate
+    @Resource
+    private SolrTemplate solrTemplate;
+
+    @Resource
+    private StaticPageService staticPageService;
 
     /**
      * 添加商品
@@ -182,8 +191,6 @@ public class GoodsServiceImpl implements GoodsService {
         if (goods.getSellerId() != null) {
             criteria.andSellerIdEqualTo(goods.getSellerId()); // 查询当前商家下的商品列表
         }
-        //未删除
-        criteria.andIsDeleteIsNotNull();
         //排序
         query.setOrderByClause("id desc");
 
@@ -380,6 +387,7 @@ public class GoodsServiceImpl implements GoodsService {
      * @param ids
      * @param status
      */
+    @Transactional
     @Override
     public void updateStatus(Long[] ids, String status) {
         if (ids != null && ids.length > 0) {
@@ -391,12 +399,58 @@ public class GoodsServiceImpl implements GoodsService {
                 goods.setId(id);
                 goodsDao.updateByPrimaryKeySelective(goods);
                 if ("1".equals(status)) {
-                    // TODO 2、将商品进行上架
-                    // TODO 3、生成商品详情的静态页
+                    // 将商品进行上架
+                    //测试,将库存的所有数据保存到索引中
+                    //dataImportToSolr();
+
+                    //生产
+                    saveItemToSolr(id);
+                    //  3、生成商品详情的静态页
+                    staticPageService.getHtml(id);
+
                 }
 
             }
         }
+    }
+
+    private void saveItemToSolr(Long id) {
+        ItemQuery query = new ItemQuery();
+        // 条件：根据商品id查询对应的库存，并且库存大于0的
+        query.createCriteria().andGoodsIdEqualTo(id).andStatusEqualTo("1")
+                .andIsDefaultEqualTo("1").andNumGreaterThan(0);
+        List<Item> items = itemDao.selectByExample(query);
+        if (items != null && items.size() > 0) {
+
+            //设置动态字段
+            for (Item item : items) {
+                String spec = item.getSpec();
+                Map<String, String> specMap = JSON.parseObject(spec, Map.class);
+                item.setSpecMap(specMap);
+            }
+            solrTemplate.saveBeans(items);
+            solrTemplate.commit();
+        }
+    }
+
+    private void dataImportToSolr() {
+        //查询库存的数据
+        ItemQuery query = new ItemQuery();
+        query.createCriteria().andStatusEqualTo("1");
+        List<Item> items = itemDao.selectByExample(query);
+
+        if (items != null && items.size() > 0) {
+
+            //设置动态字段
+            for (Item item : items) {
+                String spec = item.getSpec();
+                Map<String, String> specMap = JSON.parseObject(spec, Map.class);
+                item.setSpecMap(specMap);
+            }
+            solrTemplate.saveBeans(items);
+            solrTemplate.commit();
+        }
+
     }
 
     /**
@@ -415,6 +469,11 @@ public class GoodsServiceImpl implements GoodsService {
                 goodsDao.updateByPrimaryKeySelective(goods);
 
                 // TODO 2、商品下架
+                SimpleQuery query = new SimpleQuery("item_goodsid:" + id);
+                solrTemplate.delete(query);
+                solrTemplate.commit();
+
+
                 // TODO 3、删除商品详情的静态页【可选】
 
             }

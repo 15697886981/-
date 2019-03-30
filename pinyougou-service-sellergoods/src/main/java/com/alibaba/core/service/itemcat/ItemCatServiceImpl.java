@@ -4,16 +4,18 @@ import com.alibaba.core.dao.item.ItemCatDao;
 import com.alibaba.core.pojo.item.ItemCat;
 import com.alibaba.core.pojo.item.ItemCatQuery;
 import com.alibaba.dubbo.config.annotation.Service;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ItemCatServiceImpl implements ItemCatService {
     //注入dao
     @Resource
     private ItemCatDao itemCatDao;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 商品分类列表查询
@@ -23,6 +25,16 @@ public class ItemCatServiceImpl implements ItemCatService {
      */
     @Override
     public List<ItemCat> findByParentId(Long parentId) {
+
+        //查询所有分类放入缓存:分类名称----模板id
+        List<ItemCat> list = itemCatDao.selectByExample(null);
+        if (list != null && list.size() > 0) {
+            for (ItemCat itemCat : list) {
+                redisTemplate.boundHashOps("itemCat").put(itemCat.getName(), itemCat.getTypeId());
+            }
+        }
+
+
         //设置查询条件
         ItemCatQuery query = new ItemCatQuery();
         query.createCriteria().andParentIdEqualTo(parentId);
