@@ -59,6 +59,9 @@ public class GoodsServiceImpl implements GoodsService {
     @Resource
     private Destination topicPageAndSolrDestination;
 
+    @Resource
+    private Destination queueSolrDeleteDestination;
+
     /**
      * 添加商品
      *
@@ -369,7 +372,9 @@ public class GoodsServiceImpl implements GoodsService {
         //设置查询条件 未审核&&未删除
         GoodsQuery query = new GoodsQuery();
         GoodsQuery.Criteria criteria = query.createCriteria();
+
         if (goods.getGoodsName() != null && !"".equals(goods.getGoodsName().trim())) {
+            //商品名
             criteria.andGoodsNameEqualTo(goods.getGoodsName());
         }
         if (goods.getAuditStatus() != null && !"".equals(goods.getAuditStatus().trim())) {
@@ -479,14 +484,22 @@ public class GoodsServiceImpl implements GoodsService {
         if (ids != null && ids.length > 0) {
             Goods goods = new Goods();
             goods.setIsDelete("1");
-            for (Long id : ids) {
+            for (final Long id : ids) {
                 goods.setId(id);
                 goodsDao.updateByPrimaryKeySelective(goods);
 
                 // TODO 2、商品下架
-                SimpleQuery query = new SimpleQuery("item_goodsid:" + id);
-                solrTemplate.delete(query);
-                solrTemplate.commit();
+//                SimpleQuery query = new SimpleQuery("item_goodsid:" + id);
+//                solrTemplate.delete(query);
+//                solrTemplate.commit();
+                //将消息发送到MQ中
+                jmsTemplate.send(queueSolrDeleteDestination, new MessageCreator() {
+                    @Override
+                    public Message createMessage(Session session) throws JMSException {
+                        TextMessage textMessage = session.createTextMessage(String.valueOf(id));
+                        return textMessage;
+                    }
+                });
 
 
                 // TODO 3、删除商品详情的静态页【可选】

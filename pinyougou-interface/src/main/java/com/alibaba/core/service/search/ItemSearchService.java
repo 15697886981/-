@@ -18,4 +18,11 @@ public interface ItemSearchService {
      * @param id
      */
     void addItemToSolr(Long id);
+
+    /**
+     * 商品下架--从索引库中删除
+     *
+     * @param id
+     */
+    void deleteItemFromSolr(Long id);
 }
