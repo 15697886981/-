@@ -20,9 +20,12 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.SimpleQuery;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessageCreator;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.jms.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +51,13 @@ public class GoodsServiceImpl implements GoodsService {
     @Resource
     private SolrTemplate solrTemplate;
 
+/*    @Resource
+    private StaticPageService staticPageService;*/
+
     @Resource
-    private StaticPageService staticPageService;
+    private JmsTemplate jmsTemplate;
+    @Resource
+    private Destination topicPageAndSolrDestination;
 
     /**
      * 添加商品
@@ -395,7 +403,7 @@ public class GoodsServiceImpl implements GoodsService {
             Goods goods = new Goods();
             goods.setAuditStatus(status);
 
-            for (Long id : ids) {
+            for (final Long id : ids) {
                 goods.setId(id);
                 goodsDao.updateByPrimaryKeySelective(goods);
                 if ("1".equals(status)) {
@@ -404,10 +412,17 @@ public class GoodsServiceImpl implements GoodsService {
                     //dataImportToSolr();
 
                     //生产
-                    saveItemToSolr(id);
+                    //saveItemToSolr(id);
                     //  3、生成商品详情的静态页
-                    staticPageService.getHtml(id);
+                    //staticPageService.getHtml(id);
 
+                    jmsTemplate.send(topicPageAndSolrDestination, new MessageCreator() {
+                        @Override
+                        public Message createMessage(Session session) throws JMSException {
+                            TextMessage textMessage = session.createTextMessage(String.valueOf(id));
+                            return textMessage;
+                        }
+                    });
                 }
 
             }

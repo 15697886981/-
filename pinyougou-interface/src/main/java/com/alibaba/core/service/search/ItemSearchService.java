@@ -10,4 +10,12 @@ public interface ItemSearchService {
      * @return
      */
     Map<String, Object> search(Map<String, String> searchMap);
+
+
+    /**
+     * 商品上架--保存到索引中
+     *
+     * @param id
+     */
+    void addItemToSolr(Long id);
 }

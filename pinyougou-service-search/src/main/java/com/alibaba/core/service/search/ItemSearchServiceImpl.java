@@ -1,6 +1,8 @@
 package com.alibaba.core.service.search;
 
+import com.alibaba.core.dao.item.ItemDao;
 import com.alibaba.core.pojo.item.Item;
+import com.alibaba.core.pojo.item.ItemQuery;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,8 @@ public class ItemSearchServiceImpl implements ItemSearchService {
     private SolrTemplate solrTemplate;
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    private ItemDao itemDao;
 
     /**
      * 前台系统检索
@@ -240,4 +244,28 @@ public class ItemSearchServiceImpl implements ItemSearchService {
 
     }
 
+    /**
+     * 商品上架--保存到索引中
+     *
+     * @param id
+     */
+    @Override
+    public void addItemToSolr(Long id) {
+        ItemQuery query = new ItemQuery();
+        // 条件：根据商品id查询对应的库存，并且库存大于0的
+        query.createCriteria().andGoodsIdEqualTo(id).andStatusEqualTo("1")
+                .andIsDefaultEqualTo("1").andNumGreaterThan(0);
+        List<Item> items = itemDao.selectByExample(query);
+        if (items != null && items.size() > 0) {
+
+            //设置动态字段
+            for (Item item : items) {
+                String spec = item.getSpec();
+                Map<String, String> specMap = JSON.parseObject(spec, Map.class);
+                item.setSpecMap(specMap);
+            }
+            solrTemplate.saveBeans(items);
+            solrTemplate.commit();
+        }
+    }
 }
