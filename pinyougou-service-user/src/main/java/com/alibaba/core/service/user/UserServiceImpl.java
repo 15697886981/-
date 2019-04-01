@@ -1,6 +1,9 @@
 package com.alibaba.core.service.user;
 
+import com.alibaba.core.dao.user.UserDao;
+import com.alibaba.core.pojo.user.User;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.utils.core.md5.MD5Util;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,6 +15,7 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,6 +36,10 @@ public class UserServiceImpl implements UserService {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+
+    @Resource
+    private UserDao userDao;
+
     /**
      * 发送验证码
      *
@@ -41,12 +49,19 @@ public class UserServiceImpl implements UserService {
     public void sendCode(final String phone) {
 
         final String code = RandomStringUtils.randomNumeric(6);
-        System.out.println(code);
+        System.out.println("你的验证码是:" + code);
 
         //把session存入redis中
         redisTemplate.boundValueOps(phone).set(code);
         //设置过期时间
         redisTemplate.boundValueOps(phone).expire(5, TimeUnit.MINUTES);
+
+
+        // 保存验证码到redis中
+        // 使用的数据结构：String  set key（phone） value（code）
+        //redisTemplate.boundValueOps(phone).set(code);
+        // 设置验证码的失效时间(redis数据过期：设置key过期，expire)
+        //redisTemplate.boundValueOps(phone).expire(5, TimeUnit.MINUTES);
 
 
         //将数据发送到mq中
@@ -62,5 +77,31 @@ public class UserServiceImpl implements UserService {
                 return mapMessage;
             }
         });
+    }
+
+    /**
+     * 用户注册
+     *
+     * @param smscode
+     * @param user
+     */
+    @Override
+    public void add(String smscode, User user) {
+        //判断验证码是否正确
+
+        String code = (String) redisTemplate.boundValueOps(user.getPhone()).get();
+
+        if (code != null && !smscode.equals("") && smscode.equals(code)) {
+
+            //验证码正确
+            //保存用户
+            String password = MD5Util.MD5Encode(user.getPassword(), null);
+            user.setPassword(password);
+            user.setCreated(new Date());
+            user.setUpdated(new Date());
+            userDao.insertSelective(user);
+        } else {
+            throw new RuntimeException("验证码不正确");
+        }
     }
 }

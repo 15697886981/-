@@ -1,9 +1,11 @@
 package com.alibaba.core.controller;
 
 import com.alibaba.core.entity.Result;
+import com.alibaba.core.pojo.user.User;
 import com.alibaba.core.service.user.UserService;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.utils.core.checkphone.PhoneFormatCheckUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +22,12 @@ public class UserController {
     @Reference
     private UserService userService;
 
+    /**
+     * 用户注册
+     *
+     * @param smscode
+     * @param user
+     */
     @RequestMapping("sendCode.do")
     public Result sendCode(String phone) {
 
@@ -39,5 +47,17 @@ public class UserController {
 
     }
 
+    @RequestMapping("add.do")
+    public Result add(String smscode, @RequestBody User user) {
+        try {
+            userService.add(smscode, user);
+            return new Result(true, "注册成功");
+        } catch (RuntimeException e) {
+            return new Result(false, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Result(false, "注册失败");
+        }
+    }
 
 }
