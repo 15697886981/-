@@ -3,6 +3,7 @@ package com.alibaba.core.service.user;
 import com.alibaba.dubbo.config.annotation.Service;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
@@ -11,6 +12,7 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName UserService
@@ -27,6 +29,9 @@ public class UserServiceImpl implements UserService {
     @Resource
     private JmsTemplate jmsTemplate;
 
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
     /**
      * 发送验证码
      *
@@ -37,6 +42,13 @@ public class UserServiceImpl implements UserService {
 
         final String code = RandomStringUtils.randomNumeric(6);
         System.out.println(code);
+
+        //把session存入redis中
+        redisTemplate.boundValueOps(phone).set(code);
+        //设置过期时间
+        redisTemplate.boundValueOps(phone).expire(5, TimeUnit.MINUTES);
+
+
         //将数据发送到mq中
         jmsTemplate.send(smsDestination, new MessageCreator() {
             @Override
@@ -45,7 +57,7 @@ public class UserServiceImpl implements UserService {
                 MapMessage mapMessage = session.createMapMessage();
                 mapMessage.setString("phoneNumbers", phone);
                 mapMessage.setString("signName", "品优购");
-                mapMessage.setString("templateCode", "SMS_140720901");
+                mapMessage.setString("templateCode", "SMS_162522315");
                 mapMessage.setString("templateParam", "{\"code\":\"" + code + "\"}");
                 return mapMessage;
             }
