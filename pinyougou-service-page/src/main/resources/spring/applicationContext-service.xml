@@ -10,7 +10,7 @@
 
     <!--配置dubbo协议-->
     <!--默认走的就是dubbo协议-->
-    <dubbo:protocol name="dubbo" port="20880"/>
+    <dubbo:protocol name="dubbo" port="20883"/>
 
     <!--暴露接口位置-->
     <dubbo:annotation package="com.alibaba.core.service"/>
