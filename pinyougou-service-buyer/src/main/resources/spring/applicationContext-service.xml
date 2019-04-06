@@ -3,9 +3,21 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 
+    <!--配置spring与dubbo整合-->
     <dubbo:application name="pinyougou-service-buyer"/>
+    <!--配置注册中心-->
     <dubbo:registry address="zookeeper://192.168.200.128:2181"/>
+    <!--配置dubbo协议-->
     <!--默认走的就是dubbo协议-->
     <dubbo:protocol name="dubbo" port="20885"/>
+    <!--暴露接口位置-->
     <dubbo:annotation package="com.alibaba.core.service"/>
+
+
+    <!-- 分布式主键id -->
+    <bean id="idWorker" class="com.alibaba.utils.core.uniquekey.IdWorker">
+        <constructor-arg index="0" value="1"></constructor-arg>
+        <constructor-arg index="1" value="0"></constructor-arg>
+    </bean>
+
 </beans>

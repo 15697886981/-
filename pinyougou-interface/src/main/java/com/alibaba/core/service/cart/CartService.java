@@ -21,4 +21,21 @@ public interface CartService {
      * @return
      */
     List<Cart> autoDataToCart(List<Cart> cartList);
+
+    /**
+     * 将本地购物车合并到redis中去
+     *
+     * @param username
+     * @param cartList
+     */
+    void mergeCartList(String username, List<Cart> cartList);
+
+
+    /**
+     * 从redis取出购物车
+     *
+     * @param name
+     * @return
+     */
+    List<Cart> findCartListFromRedis(String name);
 }
