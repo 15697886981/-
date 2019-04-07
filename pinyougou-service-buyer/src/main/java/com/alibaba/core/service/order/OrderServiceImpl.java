@@ -1,10 +1,12 @@
 package com.alibaba.core.service.order;
 
 import com.alibaba.core.dao.item.ItemDao;
+import com.alibaba.core.dao.log.PayLogDao;
 import com.alibaba.core.dao.order.OrderDao;
 import com.alibaba.core.dao.order.OrderItemDao;
 import com.alibaba.core.pojo.cart.Cart;
 import com.alibaba.core.pojo.item.Item;
+import com.alibaba.core.pojo.log.PayLog;
 import com.alibaba.core.pojo.order.Order;
 import com.alibaba.core.pojo.order.OrderItem;
 import com.alibaba.dubbo.config.annotation.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -37,6 +40,8 @@ public class OrderServiceImpl implements OrderService {
     private IdWorker idWorker;
     @Resource
     private ItemDao itemDao;
+    @Resource
+    private PayLogDao payLogDao;
 
     /**
      * 提交订单
@@ -50,12 +55,14 @@ public class OrderServiceImpl implements OrderService {
 
         //保存订单 根据商家id合并
         List<Cart> orderList = (List<Cart>) redisTemplate.boundHashOps("BUYER_CART").get(username);
-
+        List<Long> orderIds = new ArrayList<>();
         //获取商家id
         if (orderList != null && orderList.size() > 0) {
+            double totalPrice = 0f; //本次交易金额
             for (Cart cart : orderList) {//根据商家id进行分类
                 //订单明细
-                long orderId = idWorker.nextId();
+                long orderId = idWorker.nextId(); //订单id
+                orderIds.add(orderId); //保存订单id
                 order.setOrderId(orderId);// 主键
                 double payment = 0f;// 订单的总金额（购买的该商家下的商品的总金额）
                 order.setPaymentType("1");// 支付方式：在线支付
@@ -91,8 +98,24 @@ public class OrderServiceImpl implements OrderService {
                 }
                 //总金额 = 该商家的订单明细价格
                 order.setPayment(new BigDecimal(payment));
+                totalPrice += payment;
                 orderDao.insertSelective(order);
             }
+            //保存订单日志
+            PayLog payLog = new PayLog();
+            payLog.setOutTradeNo(String.valueOf(idWorker.nextId()));                   //支付订单号
+            payLog.setCreateTime(new Date());                             //订单创建日期
+            payLog.setTotalFee((long) totalPrice * 100);                //订单总金额
+            payLog.setUserId(username);                                      //订单用户id
+            payLog.setTradeState("0");                                         //交易状态 (0:未支付)
+            //        [123456786453,12345654,234234567]
+            payLog.setOrderList(orderIds.toString().replace("[", "").replace("]", ""));                                    //订单编号列表
+            payLog.setPayType("1");                                             //支付类型
+
+            //初始化交易日志
+            payLogDao.insertSelective(payLog);
+            //将交易日志储存到缓存中去
+            redisTemplate.boundHashOps("payLog").put(username, payLog);
             //清空购物车
             redisTemplate.boundHashOps("BUYER_CART").delete(username);
         }
